@@ -106,6 +106,28 @@
   - name: "Composer: Move Composer into globally-accessible location."
     shell: mv composer.phar /usr/local/bin/composer creates=/usr/local/bin/composer
 
+
+  # - name: "Install Phing"
+  #   command:
+  #     # pear channel-discover pear.phing.info
+  #     pear install [--alldeps] phing/phing
+
+  # PHING
+  # - name: Setup phing PEAR channel.
+  #   command: pear channel-discover pear.phing.info
+  #   register: channel_result
+    # environment: proxy_env
+    # changed_when: "'initialized' not in channel_result.stdout"
+    # TODO: This will always error out the first time it's run.
+    # failed_when: "'already initialized' not in channel_result.stdout"
+
+  # - name: Install phing.
+  #   command: pear install phing/phing
+  #   register: phing
+    # environment: proxy_env
+    # changed_when: "'installed' not in drush_result.stdout"
+    # failed_when: "'6.2.0.0' not in drush_result.stdout"
+
   # DRUSH ######################################################################
   - name: "Drush: Check out drush master branch so it works with all Drupal versions."
     git: repo=https://github.com/drush-ops/drush.git dest=/opt/drush
@@ -139,16 +161,42 @@
   #     version={{ drupal_core_version }}
   #     dest=/var/www/drupal-{{ drupal_core_version }}-dev
 
-  - name: "Drupal: Install Drupal."
+
+  # Download Drupal using Git.
+  - name: "Drupal: Check out ALW to the Apache docroot."
+    action: git repo=git@github.com:ArteGEIE/LiveWeb-KW.git dest=/var/www/alw version=HEAD
+
+  # # Download our MZ box
+  # - name: "Drupal: Check out Foundation."
+  #   git:
+  #     repo=https://github.com/marzeelabs/mz_box.git
+  #     version=HEAD
+  #     dest=/var/www/mz_box
+
+  # Build with phing
+  - name: "Build with Phing."
     command:
-      drush si -y --site-name="{{ drupal_site_name }}" --account-name=admin --account-pass=admin --db-url=mysql://root@localhost/{{ domain }}
-      chdir=/var/www/drupal-{{ drupal_core_version }}-dev
-      creates=/var/www/drupal-{{ drupal_core_version }}-dev/sites/default/settings.php
+      chdir=/var/www/mz_box
+      phing build
     notify: restart apache
 
-  # SEE: https://drupal.org/node/2121849#comment-8413637
-  - name: "Drupal: Set permissions properly on settings.php."
-    file: path=/var/www/drupal-{{ drupal_core_version }}-dev/sites/default/settings.APC mode=0744
+  # # Download Drupal using Git.
+  # - name: "Drupal: Check out Foundation."
+  #   git:
+  #     repo=git@github.com:ArteGEIE/ArteFoundation.git
+  #     version=HEAD
+  #     dest=/var/www/alw/profiles/foundation
 
-  - name: "Drupal: Set permissions properly on files directory."
-    file: path=/var/www/drupal-{{ drupal_core_version }}-dev/sites/default/files mode=0777 state=directory recurse=yes
+  # - name: "Drupal: Install Drupal."
+  #   command:
+  #     drush si alw -y --site-name="{{ drupal_site_name }}" --account-name=admin --account-pass=admin --db-url=mysql://root@localhost/drupaltest
+  #     chdir=/var/www/alw
+  #     creates=/var/www/alw/sites/default/settings.php
+  #   notify: restart apache
+
+  # # SEE: https://drupal.org/node/2121849#comment-8413637
+  # - name: "Drupal: Set permissions properly on settings.php."
+  #   file: path=/var/www/drupal-{{ drupal_core_version }}-dev/sites/default/settings.APC mode=0744
+
+  # - name: "Drupal: Set permissions properly on files directory."
+  #   file: path=/var/www/drupal-{{ drupal_core_version }}-dev/sites/default/files mode=0777 state=directory recurse=yes

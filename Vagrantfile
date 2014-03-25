@@ -25,12 +25,19 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
+  #config.vm.synced_folder ".", "/vagrant", owner: "vagrant", group: "www-data",
+  #  :mount_options => ['dmode=775', 'fmode=664']
 
   # Configure VirtualBox.
   config.vm.provider :virtualbox do |vb|  
     # Set the RAM for this VM to 512M.
     vb.customize ["modifyvm", :id, "--memory", "512"]
   end
+
+  # other config here
+
+  config.vm.synced_folder ".", "/Users/pvhee/vagrant"
+
 
   # Enable provisioning with Ansible.
   config.vm.provision "ansible" do |ansible|
